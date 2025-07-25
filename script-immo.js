@@ -33,20 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
         companyLogo.classList.add('hidden'); // S'assurer qu'il est caché s'il n'y a pas de logo
     }
 
-    // ⭐⭐⭐ INFORMATIONS PRÉCISES POUR TON GOOGLE FORM IMMOBILIER ⭐⭐⭐
-    // Ces IDs ont été extraits de ton formulaire "Feedback AvisClic Immo"
-    const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSc_Yep8FBpyDfZRs0bgTDz1AV1h3d7FLdQ6MgncFdNdYROGUg/formResponse'; 
+    // ⭐⭐⭐ VALEURS MISES À JOUR POUR TON GOOGLE FORM ⭐⭐⭐
+    const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSc_Yep8FBpyDfZRs0bgTDz1AV1h3d7FLdQ6MgncFdNdYROGUg/formResponse';
     const FORM_FIELD_NAMES = {
-        note: 'entry.1825203782',           // Note de l'expérience
-        options: 'entry.1148647656',        // Options d'amélioration
-        commentaire: 'entry.39037695',      // Commentaire Libre
-        nomEntreprise: 'entry.161944146',   // Nom de l'entreprise (Auto)
-        urlLogo: 'entry.200445465',         // URL Logo (Auto)
+        note: 'entry.1825203782', // Note de l'expérience
+        options: 'entry.1148647656', // Options d'amélioration
+        commentaire: 'entry.39037695', // Commentaire Libre
+        nomEntreprise: 'entry.161944146', // Nom de l'entreprise (Auto)
+        urlLogo: 'entry.200445465', // URL Logo (Auto)
     };
-    // ⭐⭐⭐ FIN DES INFOS PRÉCISES IMMO ⭐⭐⭐
+    // ⭐⭐⭐ FIN DES VALEURS MISES À JOUR ⭐⭐⭐
 
     // Fonction pour mettre à jour l'affichage des étoiles
-    function updateStarDisplay(ratingValue) { 
+    function updateStarDisplay(ratingValue) {
         stars.forEach((s, index) => {
             if (index < ratingValue) {
                 s.classList.add('selected');
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fonction pour réinitialiser l'application à son état initial
-    function resetApplication() { 
+    function resetApplication() {
         selectedRating = 0;
         selectedOptions.clear();
         otherFeedbackTextarea.value = '';
@@ -92,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Gestionnaire de clic sur étoile
-    function handleStarClick() { 
+    function handleStarClick() {
         selectedRating = parseInt(this.dataset.value); 
         
         updateStarDisplay(selectedRating); 
@@ -106,12 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
             feedbackLowScore.classList.remove('hidden');
             thankYouMessage.classList.add('hidden'); 
         } else {
+            // Utilise l'URL Google récupérée des paramètres
             window.location.href = googleReviewUrlFromParam;
         }
     }
 
     // Gestionnaire de survol d'étoile
-    function handleStarMouseOver() { 
+    function handleStarMouseOver() {
         if (!starRating.classList.contains('rated')) { 
             const hoverValue = parseInt(this.dataset.value);
             updateStarDisplay(hoverValue);
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Gestionnaire de sortie de survol d'étoile
-    function handleStarMouseOut() { 
+    function handleStarMouseOut() {
         if (!starRating.classList.contains('rated')) { 
             updateStarDisplay(0); 
         } else { 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Gestion des options d'amélioration pour les notes basses (sélection multiple)
-    optionButtons.forEach(button => { 
+    optionButtons.forEach(button => {
         button.addEventListener('click', () => {
             const optionValue = button.dataset.option;
             if (selectedOptions.has(optionValue)) {
@@ -141,57 +141,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- CETTE SECTION ENVOIE LES DONNÉES À GOOGLE FORMS VIA IFRAME ---
-    submitLowScoreButton.addEventListener('click', () => { // Plus besoin de 'async'
+    // --- CETTE SECTION ENVOIE LES DONNÉES À GOOGLE FORMS ---
+    submitLowScoreButton.addEventListener('click', async () => { // Ajout de 'async'
         const comments = otherFeedbackTextarea.value.trim();
         
-        // Créer un formulaire temporaire pour envoyer les données
-        const form = document.createElement('form');
-        form.action = GOOGLE_FORM_ACTION_URL;
-        form.method = 'POST';
-        form.target = 'hidden_iframe'; // Cible l'iframe caché
+        // Préparer les données pour Google Forms
+        const formData = new FormData();
+        formData.append(FORM_FIELD_NAMES.note, selectedRating); // La note sélectionnée
         
-        // Ajouter le formulaire temporaire au corps du document D'ABORD
-        document.body.appendChild(form); // <-- Assurer qu'il est dans le DOM avant de remplir/soumettre
-
-        // Ajouter les champs cachés au formulaire temporaire
-        const addHiddenField = (name, value) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = value;
-            form.appendChild(input);
-        };
-
-        addHiddenField(FORM_FIELD_NAMES.note, selectedRating);
-        
+        // Pour les cases à cocher, Google Forms s'attend à plusieurs entrées pour le même nom de champ
         Array.from(selectedOptions).forEach(option => {
-            addHiddenField(FORM_FIELD_NAMES.options, option); 
+            formData.append(FORM_FIELD_NAMES.options, option); // Les options sélectionnées
         });
         
-        addHiddenField(FORM_FIELD_NAMES.commentaire, comments);
-        addHiddenField(FORM_FIELD_NAMES.nomEntreprise, company); 
-        addHiddenField(FORM_FIELD_NAMES.urlLogo, logo);         
+        formData.append(FORM_FIELD_NAMES.commentaire, comments); // Le commentaire libre
+        formData.append(FORM_FIELD_NAMES.nomEntreprise, company); // Le nom de l'entreprise (pris des paramètres d'URL)
+        formData.append(FORM_FIELD_NAMES.urlLogo, logo);         // L'URL du logo (pris des paramètres d'URL)
 
-        // Soumettre le formulaire
-        form.submit();
-        
-        // Nettoyer le formulaire temporaire APRES UN COURT DÉLAI pour s'assurer de la soumission
-        // Le setTimeout permet au navigateur de traiter la soumission avant de retirer le formulaire.
-        setTimeout(() => {
-            document.body.removeChild(form); 
-        }, 500); // Retirer après 500ms (0.5 seconde)
+        try {
+            // Envoi des données au Google Form. 'mode: no-cors' est essentiel pour éviter les erreurs.
+            const response = await fetch(GOOGLE_FORM_ACTION_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: formData,
+            });
 
-        // Afficher le message de remerciement IMMÉDIATEMENT
-        feedbackLowScore.classList.add('hidden');
-        thankYouMessage.classList.remove('hidden');
-        initialFeedbackSection.classList.add('hidden'); 
+            console.log("Feedback envoyé au Google Form ! (La réponse en 'no-cors' ne peut pas être lue)");
+            
+            // Une fois envoyé, afficher le message de remerciement
+            feedbackLowScore.classList.add('hidden');
+            thankYouMessage.classList.remove('hidden');
+            initialFeedbackSection.classList.add('hidden'); 
 
-        console.log("Tentative d'envoi du feedback au Google Form Immobilier via iframe !");
+        } catch (error) {
+            console.error("Erreur lors de l'envoi du feedback au Google Form :", error);
+            alert("Une erreur est survenue lors de l'envoi de votre feedback. Veuillez réessayer.");
+        }
     });
 
     // Gestion du bouton "Retour"
-    backToStarsButton.addEventListener('click', () => { 
+    backToStarsButton.addEventListener('click', () => {
         feedbackLowScore.classList.add('hidden');
         initialFeedbackSection.classList.remove('hidden'); 
         starRating.classList.remove('rated'); 
@@ -199,7 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Gestion du bouton "Fermer"
-    resetAppButton.addEventListener('click', () => { 
+    resetAppButton.addEventListener('click', () => {
+        // Redirige vers google.com
         window.location.href = 'https://www.google.com'; 
     });
 
