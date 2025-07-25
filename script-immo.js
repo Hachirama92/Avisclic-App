@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Récupérer les paramètres de l'URL
     const urlParams = new URLSearchParams(window.location.search);
-    const company = urlParams.get('nomEntreprise') || 'votre expérience'; 
+    const company = urlParams.get('nomEntreprise') || 'votre expérience'; // Valeur par défaut si non fourni
     const logo = urlParams.get('logoUrl');
-    const googleReviewUrlFromParam = urlParams.get('googleUrl') || 'https://www.google.com'; 
+    const googleReviewUrlFromParam = urlParams.get('googleUrl') || 'https://www.google.com'; // Redirection par défaut si non fourni
 
     // Mettre à jour le texte du titre
     companyNameSpan.textContent = company;
@@ -30,17 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
         companyLogo.src = logo;
         companyLogo.classList.remove('hidden');
     } else {
-        companyLogo.classList.add('hidden'); 
+        companyLogo.classList.add('hidden'); // S'assurer qu'il est caché s'il n'y a pas de logo
     }
 
     // ⭐⭐⭐ INFORMATIONS PRÉCISES POUR TON GOOGLE FORM IMMOBILIER ⭐⭐⭐
+    // Ces IDs ont été extraits de ton formulaire "Feedback AvisClic Immo"
     const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSc_Yep8FBpyDfZRs0bgTDz1AV1h3d7FLdQ6MgncFdNdYROGUg/formResponse'; 
     const FORM_FIELD_NAMES = {
-        note: 'entry.1825203782',           
-        options: 'entry.1148647656',        
-        commentaire: 'entry.39037695',      
-        nomEntreprise: 'entry.161944146',   
-        urlLogo: 'entry.200445465',         
+        note: 'entry.1825203782',           // Note de l'expérience
+        options: 'entry.1148647656',        // Options d'amélioration
+        commentaire: 'entry.39037695',      // Commentaire Libre
+        nomEntreprise: 'entry.161944146',   // Nom de l'entreprise (Auto)
+        urlLogo: 'entry.200445465',         // URL Logo (Auto)
     };
     // ⭐⭐⭐ FIN DES INFOS PRÉCISES IMMO ⭐⭐⭐
 
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Fonction pour activer/désactiver les écouteurs de clic et survol sur les étoiles
-    function toggleStarListeners(enable) { 
+    function toggleStarListeners(enable) {
         stars.forEach(star => {
             if (enable) {
                 star.addEventListener('click', handleStarClick);
@@ -140,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- MISE À JOUR ICI POUR ENVOYER À GOOGLE FORMS VIA IFRAME ---
+    // --- CETTE SECTION ENVOIE LES DONNÉES À GOOGLE FORMS VIA IFRAME ---
     submitLowScoreButton.addEventListener('click', () => { // Plus besoin de 'async'
         const comments = otherFeedbackTextarea.value.trim();
         
@@ -149,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
         form.action = GOOGLE_FORM_ACTION_URL;
         form.method = 'POST';
         form.target = 'hidden_iframe'; // Cible l'iframe caché
+        
+        // Ajouter le formulaire temporaire au corps du document D'ABORD
+        document.body.appendChild(form); // <-- Assurer qu'il est dans le DOM avant de remplir/soumettre
 
         // Ajouter les champs cachés au formulaire temporaire
         const addHiddenField = (name, value) => {
@@ -169,17 +173,21 @@ document.addEventListener('DOMContentLoaded', () => {
         addHiddenField(FORM_FIELD_NAMES.nomEntreprise, company); 
         addHiddenField(FORM_FIELD_NAMES.urlLogo, logo);         
 
-        // Ajouter le formulaire temporaire au corps du document et le soumettre
-        document.body.appendChild(form);
+        // Soumettre le formulaire
         form.submit();
-        document.body.removeChild(form); // Nettoyer le formulaire temporaire
+        
+        // Nettoyer le formulaire temporaire APRES UN COURT DÉLAI pour s'assurer de la soumission
+        // Le setTimeout permet au navigateur de traiter la soumission avant de retirer le formulaire.
+        setTimeout(() => {
+            document.body.removeChild(form); 
+        }, 500); // Retirer après 500ms (0.5 seconde)
 
-        // Une fois envoyé, afficher le message de remerciement
+        // Afficher le message de remerciement IMMÉDIATEMENT
         feedbackLowScore.classList.add('hidden');
         thankYouMessage.classList.remove('hidden');
         initialFeedbackSection.classList.add('hidden'); 
 
-        console.log("Feedback envoyé au Google Form Immobilier via iframe !");
+        console.log("Tentative d'envoi du feedback au Google Form Immobilier via iframe !");
     });
 
     // Gestion du bouton "Retour"
@@ -195,9 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'https://www.google.com'; 
     });
 
-    // Initialisation
-    resetApplication(); 
-});
     // Initialisation
     resetApplication(); 
 });
