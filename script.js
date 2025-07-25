@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ⭐⭐⭐ INFORMATIONS SPÉCIFIQUES AU FORMSPREE NAILS BEAUTÉ ⭐⭐⭐
     // Ton URL Formspree fournie :
-    const FORMSPREE_ACTION_URL = 'https://formspree.io/f/mwpqobjv'; 
+    const FORMSPREE_ACTION_URL = 'https://formspree.io/f/mjkowodg'; 
     
     // Noms des champs pour Formspree :
     const FORM_FIELD_NAMES = {
