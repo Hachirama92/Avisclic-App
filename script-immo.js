@@ -140,38 +140,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- CETTE SECTION ENVOIE LES DONNÉES À GOOGLE FORMS ---
-    submitLowScoreButton.addEventListener('click', async () => { 
+    // --- MISE À JOUR ICI POUR ENVOYER À GOOGLE FORMS VIA IFRAME ---
+    submitLowScoreButton.addEventListener('click', () => { // Plus besoin de 'async'
         const comments = otherFeedbackTextarea.value.trim();
         
-        const formData = new FormData();
-        formData.append(FORM_FIELD_NAMES.note, selectedRating);
+        // Créer un formulaire temporaire pour envoyer les données
+        const form = document.createElement('form');
+        form.action = GOOGLE_FORM_ACTION_URL;
+        form.method = 'POST';
+        form.target = 'hidden_iframe'; // Cible l'iframe caché
+
+        // Ajouter les champs cachés au formulaire temporaire
+        const addHiddenField = (name, value) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
+        };
+
+        addHiddenField(FORM_FIELD_NAMES.note, selectedRating);
         
         Array.from(selectedOptions).forEach(option => {
-            formData.append(FORM_FIELD_NAMES.options, option); 
+            addHiddenField(FORM_FIELD_NAMES.options, option); 
         });
         
-        formData.append(FORM_FIELD_NAMES.commentaire, comments);
-        formData.append(FORM_FIELD_NAMES.nomEntreprise, company); 
-        formData.append(FORM_FIELD_NAMES.urlLogo, logo);         
+        addHiddenField(FORM_FIELD_NAMES.commentaire, comments);
+        addHiddenField(FORM_FIELD_NAMES.nomEntreprise, company); 
+        addHiddenField(FORM_FIELD_NAMES.urlLogo, logo);         
 
-        try {
-            const response = await fetch(GOOGLE_FORM_ACTION_URL, {
-                method: 'POST',
-                mode: 'no-cors', 
-                body: formData,
-            });
+        // Ajouter le formulaire temporaire au corps du document et le soumettre
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form); // Nettoyer le formulaire temporaire
 
-            console.log("Feedback envoyé au Google Form Immobilier !");
-            
-            feedbackLowScore.classList.add('hidden');
-            thankYouMessage.classList.remove('hidden');
-            initialFeedbackSection.classList.add('hidden'); 
+        // Une fois envoyé, afficher le message de remerciement
+        feedbackLowScore.classList.add('hidden');
+        thankYouMessage.classList.remove('hidden');
+        initialFeedbackSection.classList.add('hidden'); 
 
-        } catch (error) {
-            console.error("Erreur lors de l'envoi du feedback au Google Form Immobilier :", error);
-            alert("Une erreur est survenue lors de l'envoi de votre feedback. Veuillez réessayer.");
-        }
+        console.log("Feedback envoyé au Google Form Immobilier via iframe !");
     });
 
     // Gestion du bouton "Retour"
@@ -187,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'https://www.google.com'; 
     });
 
+    // Initialisation
+    resetApplication(); 
+});
     // Initialisation
     resetApplication(); 
 });
